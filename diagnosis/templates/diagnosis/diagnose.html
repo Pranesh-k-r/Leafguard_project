@@ -1,0 +1,373 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Diagnose Plant - LeafGuard AI</title>
+
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f8f3;
+            color: #1b4332;
+        }
+
+        header {
+            background: #2d6a4f;
+            color: white;
+            padding: 20px 8%;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .title {
+            text-align: center;
+        }
+
+        .title h2 {
+            font-size: 36px;
+        }
+
+        .title p {
+            color: #52796f;
+        }
+
+        .options {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .option {
+            background: white;
+            width: 300px;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .option h3 {
+            color: #2d6a4f;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 13px 25px;
+            background: #40916c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .button:hover {
+            background: #1b4332;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        #preview-container {
+            margin-top: 40px;
+            text-align: center;
+            display: none;
+        }
+
+        #preview {
+            max-width: 400px;
+            max-height: 400px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        #analyze-button {
+            display: none;
+            margin: 25px auto;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <h1>🌿 LeafGuard AI</h1>
+
+</header>
+
+
+<div class="container">
+
+    <div class="title">
+
+        <h2>Plant Disease Diagnosis</h2>
+
+        <p>
+            Capture a leaf image or select one from your gallery
+            to begin the analysis.
+        </p>
+
+    </div>
+
+
+    <div class="options">
+
+        <!-- Camera -->
+
+        <div class="option">
+
+            <h3>📷 Camera</h3>
+
+            <p>
+                Take a fresh photo of the plant leaf.
+            </p>
+
+            <button class="button" onclick="openCamera()">
+                Open Camera
+            </button>
+
+        </div>
+
+
+        <!-- Gallery -->
+
+        <div class="option">
+
+            <h3>🖼️ Gallery</h3>
+
+            <p>
+                Select an existing plant image.
+            </p>
+
+            <label class="button">
+
+                Choose Image
+
+                <input
+                    type="file"
+                    id="galleryInput"
+                    accept="image/*"
+                    onchange="previewImage(event)"
+                >
+
+            </label>
+
+        </div>
+
+    </div>
+
+
+    <!-- Camera -->
+
+    <div id="camera-container"
+         style="display:none; text-align:center; margin-top:40px;">
+
+        <video
+            id="camera"
+            width="400"
+            height="300"
+            autoplay
+            style="border-radius:12px;">
+        </video>
+
+        <br>
+
+        <button
+            class="button"
+            onclick="captureImage()">
+            📸 Capture
+        </button>
+
+        <canvas
+            id="canvas"
+            style="display:none;">
+        </canvas>
+
+    </div>
+
+
+    <!-- Image Preview -->
+
+    <div id="preview-container">
+
+        <h3>Selected Image</h3>
+
+        <img
+            id="preview"
+            alt="Leaf preview">
+
+        <br>
+
+        <button
+            id="analyze-button"
+            class="button"
+            onclick="analyzeImage()">
+
+            🔍 Analyze Leaf
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let selectedImage = null;
+
+
+// ----------------------------
+// Open Camera
+// ----------------------------
+
+function openCamera() {
+
+    const cameraContainer =
+        document.getElementById("camera-container");
+
+    cameraContainer.style.display = "block";
+
+    navigator.mediaDevices.getUserMedia({
+        video: true
+    })
+    .then(function(stream) {
+
+        const video =
+            document.getElementById("camera");
+
+        video.srcObject = stream;
+
+    })
+    .catch(function(error) {
+
+        alert(
+            "Unable to access camera. Please allow camera permission."
+        );
+
+        console.error(error);
+
+    });
+
+}
+
+
+// ----------------------------
+// Capture Camera Image
+// ----------------------------
+
+function captureImage() {
+
+    const video =
+        document.getElementById("camera");
+
+    const canvas =
+        document.getElementById("canvas");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context =
+        canvas.getContext("2d");
+
+    context.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    selectedImage = canvas.toDataURL("image/jpeg");
+
+    document.getElementById("preview").src =
+        selectedImage;
+
+    document.getElementById(
+        "preview-container"
+    ).style.display = "block";
+
+    document.getElementById(
+        "analyze-button"
+    ).style.display = "inline-block";
+
+}
+
+
+// ----------------------------
+// Gallery Image
+// ----------------------------
+
+function previewImage(event) {
+
+    const file =
+        event.target.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    const reader =
+        new FileReader();
+
+    reader.onload = function(e) {
+
+        selectedImage = e.target.result;
+
+        document.getElementById(
+            "preview"
+        ).src = selectedImage;
+
+        document.getElementById(
+            "preview-container"
+        ).style.display = "block";
+
+        document.getElementById(
+            "analyze-button"
+        ).style.display = "inline-block";
+
+    };
+
+    reader.readAsDataURL(file);
+
+}
+
+
+// ----------------------------
+// Analyze
+// ----------------------------
+
+function analyzeImage() {
+
+    alert(
+        "Image selected successfully! AI analysis will be connected in the next step."
+    );
+
+}
+
+</script>
+
+</body>
+
+</html>
